@@ -80,9 +80,9 @@
         ITEMMIZE OC NAME CC EOL itensLItens { fprintf(yyout, "* %d\n", $3); } ;
 %%
 
-int main(int argc , char **argv){
-    yyin = fopen("entrada.tex", "r");
-    yyout = fopen("saida.md", "w");
+int main(int nArgs , char* szArgs []){
+    yyin = fopen(szArgs[1], "r");
+    yyout = fopen(szArgs[2], "w");
     yyparse();
 }
 
