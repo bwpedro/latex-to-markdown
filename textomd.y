@@ -80,7 +80,8 @@
     itensLNumerada: itemN |
         itemN itensLNumerada ;
 
-    itemN: ITEMMIZE OC NAME CC EOL { if(flagA == 0){ fprintf(yyout, "\n1. %d", $3); } else { fprintf(yyout, "\n 1. %d\n", $3); } } |
+    itemN: ITEMMIZE OC NAME CC EOL { if(flagA == 0){ fprintf(yyout, "\n1. %d", $3); } 
+                                     else { fprintf(yyout, "\n 1. %d\n", $3); } } |
         itemN {flagA=1;} listaNumerada;
 
     listaItens: inicioitem itensLItens fimitem ;
@@ -92,7 +93,8 @@
     itensLItens: itemI |
         itemI itensLItens ;
     
-    itemI: ITEMMIZE OC NAME CC EOL { if(flagB == 0){ fprintf(yyout, "\n* %d", $3); } else { fprintf(yyout, "\n * %d\n", $3); } } |
+    itemI: ITEMMIZE OC NAME CC EOL { if(flagB == 0){ fprintf(yyout, "\n* %d", $3); } 
+                                     else { fprintf(yyout, "\n * %d\n", $3); } } |
         itemI {flagB=1;} listaItens;
 
 %%
