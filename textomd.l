@@ -1,7 +1,6 @@
 %{
     #include "textomd.tab.h"
     #include <stdio.h>
-    #define YYSTYPE char*
 %}
 
 %%

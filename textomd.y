@@ -2,10 +2,11 @@
     #include <stdio.h>
     FILE *yyin;
     FILE *yyout;
+    int flagA = 0;
+    int flagB = 0;
 %}
 
 %token NAME
-%token CONTEUDO
 %token CLASS
 %token PACKAGE
 %token AUTHOR
@@ -24,20 +25,28 @@
     docLatex: | 
         configuracao identificacao principal;
 
-    configuracao: CLASS OC NAME CC EOL PACKAGE OC NAME CC EOL { fprintf(yyout, "[//]: <> (Classe: %d)\n\n[//]: <> (Pacote: %d)\n\n", $3, $8); } | 
-        CLASS OC NAME CC EOL { fprintf(yyout, "[//]: <> Classe: %d\n", $3); } ;
+    configuracao: classe pacote | 
+        classe ;
 
-    identificacao: TITLE OC NAME CC EOL AUTHOR OC NAME CC EOL { fprintf(yyout, "Título: %d\n\nAutor: %d\n\n", $3, $8); } | 
-        TITLE OC NAME CC EOL { fprintf(yyout, "Título: %d\n\n", $3); } ;
+    classe: CLASS OC NAME CC EOL { fprintf(yyout, "[//]: <> (Classe: %d)\n\n", $3); }
+
+    pacote: PACKAGE OC NAME CC EOL { fprintf(yyout, "[//]: <> (Pacote: %d)\n\n", $3); }
+
+    identificacao: titulo autor |
+        titulo ;
+
+    titulo: TITLE OC NAME CC EOL { fprintf(yyout, "Título: %d\n\n", $3); } ;
+
+    autor: AUTHOR OC NAME CC EOL { fprintf(yyout, "Autor: %d\n\n", $3); }
 
     principal: inicio corpolista fim ;
 
     inicio: BEGINDOCUMENT EOL { fprintf(yyout, "[//]: <> (Inicio do Documento)\n\n"); } ;
 
-    corpolista: capitulo corpo secao corpo subsecao corpolista |
+    corpolista: capitulo corpo secao corpo subsecao corpo |
         corpo ;
 
-    fim: ENDDOCUMENT EOL { fprintf(yyout, "[//]: <> (Fim do Documento)\n\n"); } ;
+    fim: ENDDOCUMENT EOL { fprintf(yyout, "\n\n[//]: <> (Fim do Documento)"); } ;
 
     capitulo: CHAPTER OC NAME CC EOL { fprintf(yyout, "## Capítulo %d\n\n", $3); } ;
 
@@ -48,36 +57,44 @@
     corpo: texto |
         texto corpo |
         textoEstilo corpo |
-        listas ;
+        listas corpo;
 
-    texto: PARAGRAPH OC NAME CC EOL { fprintf(yyout, "Paragrafo: %d\n\n", $3); } ;
+    texto: |
+        PARAGRAPH OC NAME CC EOL { fprintf(yyout, "\n\nParagrafo: %d\n\n", $3); } ;
     
     textoEstilo: BF OC NAME CC EOL { fprintf(yyout, "Negrito: **%d**\n\n", $3); } |
         UNDERLINE OC NAME CC EOL { fprintf(yyout, "Underline: %d\n\n", $3); } |
         IT OC NAME CC EOL { fprintf(yyout, "Itálico: *%d*\n\n", $3); } ;
 
-    listas: listaNumerada listaItens |
+    listas: listaNumerada texto listaItens |
         listaNumerada |
-        listaItens listaNumerada |
+        listaItens texto listaNumerada |
         listaItens ;
 
     listaNumerada: inicioenumerate itensLNumerada fimenumerate ;
 
-    inicioenumerate: BEGINENUMERATE EOL { fprintf(yyout, "[//]: <> (Inicio da Lista Enumerada)\n\n"); } ;
+    inicioenumerate: BEGINENUMERATE EOL ;
 
-    fimenumerate: ENDENUMERATE EOL { fprintf(yyout, "\n[//]: <> (Fim da Lista Enumerada)\n\n"); } ;
+    fimenumerate: ENDENUMERATE EOL ;
 
-    itensLNumerada: ITEMMIZE OC NAME CC EOL { fprintf(yyout, "1. %d\n", $3); } |
-        ITEMMIZE OC NAME CC EOL itensLNumerada { fprintf(yyout, "1. %d\n", $3); } ;
+    itensLNumerada: itemN |
+        itemN itensLNumerada ;
+
+    itemN: ITEMMIZE OC NAME CC EOL { if(flagA == 0){ fprintf(yyout, "\n1. %d", $3); } else { fprintf(yyout, "\n 1. %d\n", $3); } } |
+        itemN {flagA=1;} listaNumerada;
 
     listaItens: inicioitem itensLItens fimitem ;
 
-    inicioitem: BEGINITEM EOL { fprintf(yyout, "[//]: <> (Inicio da Lista Normal)\n\n"); } ;
+    inicioitem: BEGINITEM EOL ;
 
-    fimitem: ENDITEM EOL { fprintf(yyout, "\n[//]: <> (Fim da Lista Normal)\n\n"); } ;
+    fimitem: ENDITEM EOL ;
 
-    itensLItens: ITEMMIZE OC NAME CC EOL { fprintf(yyout, "* %d\n", $3); } |
-        ITEMMIZE OC NAME CC EOL itensLItens { fprintf(yyout, "* %d\n", $3); } ;
+    itensLItens: itemI |
+        itemI itensLItens ;
+    
+    itemI: ITEMMIZE OC NAME CC EOL { if(flagB == 0){ fprintf(yyout, "\n* %d", $3); } else { fprintf(yyout, "\n * %d\n", $3); } } |
+        itemI {flagB=1;} listaItens;
+
 %%
 
 int main(int nArgs , char* szArgs []){
@@ -86,6 +103,6 @@ int main(int nArgs , char* szArgs []){
     yyparse();
 }
 
-yyerror(char *s){
+int yyerror(char *s){
     fprintf(stderr, "error: %s\n", s);
 }
