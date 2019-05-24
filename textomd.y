@@ -1,12 +1,15 @@
 %{
     #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+    #define YYSTYPE char const *
     FILE *yyin;
     FILE *yyout;
     int flagA = 0;
     int flagB = 0;
 %}
 
-%token NAME
+%token STRING
 %token CLASS
 %token PACKAGE
 %token AUTHOR
@@ -28,16 +31,16 @@
     configuracao: classe pacote | 
         classe ;
 
-    classe: CLASS OC NAME CC EOL { fprintf(yyout, "[//]: <> (Classe: %d)\n\n", $3); }
+    classe: CLASS OC STRING CC EOL { fprintf(yyout, "[//]: <> (Classe: %s)\n\n", $3); }
 
-    pacote: PACKAGE OC NAME CC EOL { fprintf(yyout, "[//]: <> (Pacote: %d)\n\n", $3); }
+    pacote: PACKAGE OC STRING CC EOL { fprintf(yyout, "[//]: <> (Pacote: %s)\n\n", $3); }
 
     identificacao: titulo autor |
         titulo ;
 
-    titulo: TITLE OC NAME CC EOL { fprintf(yyout, "Título: %d\n\n", $3); } ;
+    titulo: TITLE OC STRING CC EOL { fprintf(yyout, "Título: %s\n\n", $3); } ;
 
-    autor: AUTHOR OC NAME CC EOL { fprintf(yyout, "Autor: %d\n\n", $3); }
+    autor: AUTHOR OC STRING CC EOL { fprintf(yyout, "Autor: %s\n\n", $3); }
 
     principal: inicio corpolista fim ;
 
@@ -46,13 +49,15 @@
     corpolista: capitulo corpo secao corpo subsecao corpo |
         corpo ;
 
-    fim: ENDDOCUMENT EOL { fprintf(yyout, "\n\n[//]: <> (Fim do Documento)"); } ;
+    fim: ENDDOCUMENT { fprintf(yyout, "[//]: <> (Fim do Documento)"); } ;
 
-    capitulo: CHAPTER OC NAME CC EOL { fprintf(yyout, "## Capítulo %d\n\n", $3); } ;
+    capitulo: CHAPTER OC STRING CC EOL { fprintf(yyout, "## %s\n\n", $3); } ;
 
-    secao: SECTION OC NAME CC EOL { fprintf(yyout, "### Seção %d\n\n", $3); } ;
+    secao: |
+        SECTION OC STRING CC EOL { fprintf(yyout, "### %s\n\n", $3); } ;
 
-    subsecao: SUBSECTION OC NAME CC EOL { fprintf(yyout, "#### Sub-Seção %d\n\n", $3); } ;
+    subsecao: | 
+        SUBSECTION OC STRING CC EOL { fprintf(yyout, "#### %s\n\n", $3); } ;
 
     corpo: texto |
         texto corpo |
@@ -60,11 +65,11 @@
         listas corpo;
 
     texto: |
-        PARAGRAPH OC NAME CC EOL { fprintf(yyout, "\n\nParagrafo: %d\n\n", $3); } ;
+        PARAGRAPH OC STRING CC EOL { fprintf(yyout, "\n\n%s\n\n", $3); } ;
     
-    textoEstilo: BF OC NAME CC EOL { fprintf(yyout, "Negrito: **%d**\n\n", $3); } |
-        UNDERLINE OC NAME CC EOL { fprintf(yyout, "Underline: %d\n\n", $3); } |
-        IT OC NAME CC EOL { fprintf(yyout, "Itálico: *%d*\n\n", $3); } ;
+    textoEstilo: BF OC STRING CC EOL { fprintf(yyout, "**%s**\n\n", $3); } |
+        UNDERLINE OC STRING CC EOL { fprintf(yyout, "%s\n\n", $3); } |
+        IT OC STRING CC EOL { fprintf(yyout, "*%s*\n\n", $3); } ;
 
     listas: listaNumerada texto listaItens |
         listaNumerada |
@@ -80,8 +85,8 @@
     itensLNumerada: itemN |
         itemN itensLNumerada ;
 
-    itemN: ITEMMIZE OC NAME CC EOL { if(flagA == 0){ fprintf(yyout, "\n1. %d", $3); } 
-                                     else { fprintf(yyout, "\n 1. %d\n", $3); } } |
+    itemN: ITEMMIZE OC STRING CC EOL { if(flagA == 0){ fprintf(yyout, "\n1. %s", $3); } 
+                                     else { fprintf(yyout, "\n 1. %s\n", $3); } } |
         itemN {flagA=1;} listaNumerada;
 
     listaItens: inicioitem itensLItens fimitem ;
@@ -93,8 +98,8 @@
     itensLItens: itemI |
         itemI itensLItens ;
     
-    itemI: ITEMMIZE OC NAME CC EOL { if(flagB == 0){ fprintf(yyout, "\n* %d", $3); } 
-                                     else { fprintf(yyout, "\n * %d\n", $3); } } |
+    itemI: ITEMMIZE OC STRING CC EOL { if(flagB == 0){ fprintf(yyout, "\n* %s", $3); } 
+                                     else { fprintf(yyout, "\n * %s\n", $3); } } |
         itemI {flagB=1;} listaItens;
 
 %%

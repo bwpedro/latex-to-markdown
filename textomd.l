@@ -1,10 +1,10 @@
 %{
+    #define YYSTYPE char const *
     #include "textomd.tab.h"
     #include <stdio.h>
 %}
 
 %%
-[0-9]+ { yylval = atoi(yytext); return NAME; }
 "{" { return OC; }
 "}" { return CC; }
 "\\documentclass" { return CLASS; }
@@ -27,5 +27,6 @@
 "\\end{itemize}" { return ENDITEM; }
 \n { return EOL; }
 [ \t] ;
+[a-zA-Z0-9]+ { yylval = strdup(yytext); return STRING; }
 . { printf("Caracter não reconhecido %s\n", yytext); }
 %%
